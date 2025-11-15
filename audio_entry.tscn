@@ -1,0 +1,59 @@
+[gd_scene load_steps=3 format=3 uid="uid://b6cn5noh3yo8e"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_18au4"]
+content_margin_left = 12.0
+content_margin_top = 0.0
+content_margin_right = 12.0
+content_margin_bottom = 0.0
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="GDScript" id="GDScript_rx6rw"]
+script/source = "extends PanelContainer
+
+func set_track(idx:int):
+	%created.text = Time.get_date_string_from_unix_time(G.files[idx].created)
+	%modified.text = Time.get_date_string_from_unix_time(G.files[idx].modified)
+	%filename.text = G.files[idx].path.get_file().get_basename()
+	#%filename.pressed.connect(G.load_active_file, G.files[idx].path)
+"
+
+[node name="Entry" type="PanelContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_18au4")
+script = SubResource("GDScript_rx6rw")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="created" type="Label" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "01-02-2025"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="modified" type="Label" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "03-04-2025"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="filename" type="Button" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Filename"
+alignment = 0

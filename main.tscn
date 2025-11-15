@@ -1,0 +1,323 @@
+[gd_scene load_steps=9 format=3 uid="uid://dpi6rq627w780"]
+
+[ext_resource type="Script" uid="uid://cfscf0pojbx2u" path="res://main.new.gd" id="1_ig7tw"]
+
+[sub_resource type="AudioStreamMicrophone" id="AudioStreamMicrophone_8ykpt"]
+
+[sub_resource type="GDScript" id="GDScript_oex3p"]
+resource_name = "Seek"
+script/source = "extends ColorRect
+
+@export var stylebox : StyleBox
+@export var chevron_color : Color
+
+
+const THRES = 0.05
+var elapse : float
+func _process(delta: float) -> void:
+	if G.mode == G.IS.RCRD:
+		elapse += delta
+		if elapse > THRES:
+			elapse = 0
+			queue_redraw()
+
+
+var drag_start : float
+var val_start : float
+func _gui_input(event: InputEvent) -> void:
+	if G.mode == G.IS.IDLE and G.main.get_node(\"%Player\").stream != null:
+		if event is InputEventMouseButton and event.is_pressed():
+			drag_start = event.position.y
+			val_start = G.curr
+		if event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			var diff : float = drag_start - event.position.y
+			G.curr = val_start + remap( diff, 0, size.y, 0, G.leng)
+			queue_redraw()
+
+
+const CHEVRON_HEI = 32
+const CHEVRON_SPEED = 6
+var chevron : float
+func _draw() -> void:
+	if G.mode == G.IS.RCRD:
+		var gradient_hei = size.y * 0.7
+		chevron = wrap( chevron - CHEVRON_SPEED, -gradient_hei, size.y)
+		
+		var peak = Vector2(size.x * 0.5, chevron)
+		var shape = [
+			Vector2(0, peak.y + CHEVRON_HEI),
+			peak,
+			Vector2(size.x, peak.y + CHEVRON_HEI),
+		]
+		draw_colored_polygon(shape, chevron_color, shape)
+		draw_gradient(shape[0].y, gradient_hei)
+	else:
+		const PLAYHEAD_THICK = 12
+		var rect := Rect2(
+			0,
+			remap( G.curr, 0, G.leng, size.y, 0 ) - PLAYHEAD_THICK * 0.5,
+			size.x,
+			PLAYHEAD_THICK,
+		)
+		draw_style_box(stylebox, rect)
+
+func draw_gradient(stop:float, hei:float, bands:int = 32,):
+	var now : float = stop
+	var thick : float = hei / bands
+	for n in range(bands + 1):
+		var start = Vector2( 0, now + n * thick + thick * 0.5)
+		if start.y - thick > size.y:
+			break
+		var col = chevron_color.lerp(color, inverse_lerp(0, 32, n))
+		draw_line(start, Vector2(size.x, start.y), col, thick, true)
+
+func reset_chevron():
+	chevron = size.y
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8ykpt"]
+bg_color = Color(0.59103674, 0.5587493, 0.83576334, 1)
+draw_center = false
+border_width_left = 5
+border_width_top = 2
+border_width_right = 5
+border_width_bottom = 2
+border_color = Color(0.6860972, 0.22616509, 0.14641166, 1)
+corner_radius_top_left = 3
+corner_radius_bottom_right = 3
+shadow_color = Color(0, 0, 0, 0.7372549)
+shadow_offset = Vector2(2, 1.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oex3p"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.18039216, 0.18039216, 0.18039216, 1)
+corner_radius_top_left = 20
+corner_radius_bottom_left = 20
+corner_detail = 5
+expand_margin_right = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8ce7h"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
+bg_color = Color(0.24313726, 0.24313726, 0.24313726, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+corner_detail = 6
+
+[sub_resource type="GDScript" id="GDScript_dmrlw"]
+resource_name = "vu_meter"
+script/source = "extends ProgressBar
+
+var drag_start : float
+var drag_diff : float
+var is_dragging : bool
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		is_dragging = event.is_pressed()
+		if event.is_pressed():
+			drag_start = event.position.x
+		else:
+			drag_diff = 0
+	
+	if event is InputEventMouseMotion and is_dragging:
+		drag_diff = drag_start - event.position.x
+		
+		if drag_diff > size.x * 0.5:
+			if G.mode == G.IS.PLAY:
+				G.mode = G.IS.IDLE
+			else:
+				G.mode = G.IS.RCRD
+			is_dragging = false  # Ensures it won't change state twice
+		elif drag_diff < size.x * -0.5:
+			if G.mode == G.IS.RCRD:
+				G.mode = G.IS.IDLE
+			else:
+				G.mode = G.IS.PLAY
+			is_dragging = false  # Ensures it won't change state twice
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dmrlw"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.18039216, 0.18039216, 0.18039216, 1)
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_detail = 5
+expand_margin_left = 4.0
+
+[node name="Main" type="Node"]
+script = ExtResource("1_ig7tw")
+
+[node name="Player" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true
+
+[node name="Microphone" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true
+stream = SubResource("AudioStreamMicrophone_8ykpt")
+mix_target = 2
+bus = &"Record"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="End" type="Button" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "00:00.00"
+
+[node name="Seek" type="ColorRect" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+clip_contents = true
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+size_flags_vertical = 3
+color = Color(0.24313726, 0.24313726, 0.24313726, 1)
+script = SubResource("GDScript_oex3p")
+stylebox = SubResource("StyleBoxFlat_8ykpt")
+chevron_color = Color(0.59, 0.4741633, 0.22419998, 1)
+
+[node name="Home" type="Button" parent="HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "00:00.0"
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="VU_Left" type="Panel" parent="HBoxContainer/VBoxContainer2/HBoxContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_oex3p")
+
+[node name="VU_Meter" type="ProgressBar" parent="HBoxContainer/VBoxContainer2/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_styles/background = SubResource("StyleBoxFlat_8ce7h")
+show_percentage = false
+script = SubResource("GDScript_dmrlw")
+
+[node name="Label" type="Label" parent="HBoxContainer/VBoxContainer2/HBoxContainer/VU_Meter"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Record <<[Paused]>> Play"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VU_Right" type="Panel" parent="HBoxContainer/VBoxContainer2/HBoxContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dmrlw")
+
+[node name="TabContainer" type="TabContainer" parent="HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/tab_separation = 8
+theme_override_font_sizes/font_size = 19
+tab_alignment = 2
+current_tab = 1
+tabs_position = 1
+
+[node name="Notes" type="VBoxContainer" parent="HBoxContainer/VBoxContainer2/TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="Button" type="Button" parent="HBoxContainer/VBoxContainer2/TabContainer/Notes"]
+layout_mode = 2
+disabled = true
+text = "Add at Position"
+
+[node name="File" type="VBoxContainer" parent="HBoxContainer/VBoxContainer2/TabContainer"]
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/VBoxContainer2/TabContainer/File"]
+layout_mode = 2
+
+[node name="Filename" type="LineEdit" parent="HBoxContainer/VBoxContainer2/TabContainer/File/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 32
+placeholder_text = "Filename"
+
+[node name="Label" type="Label" parent="HBoxContainer/VBoxContainer2/TabContainer/File/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = ".wav"
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/VBoxContainer2/TabContainer/File"]
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="HBoxContainer/VBoxContainer2/TabContainer/File"]
+layout_mode = 2
+
+[node name="New_File" type="Button" parent="HBoxContainer/VBoxContainer2/TabContainer/File/HBoxContainer2"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "NEW FILE"
+
+[node name="Spacer" type="Control" parent="HBoxContainer/VBoxContainer2/TabContainer/File/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Button" type="Button" parent="HBoxContainer/VBoxContainer2/TabContainer/File/HBoxContainer2"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "DELETE"
+
+[node name="PanelContainer" type="PanelContainer" parent="HBoxContainer/VBoxContainer2/TabContainer/File"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/VBoxContainer2/TabContainer/File/PanelContainer"]
+layout_mode = 2
+horizontal_scroll_mode = 4
+vertical_scroll_mode = 4
+
+[node name="Track_List" type="VBoxContainer" parent="HBoxContainer/VBoxContainer2/TabContainer/File/PanelContainer/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[connection signal="finished" from="Player" to="." method="_on_player_finished"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/End" to="." method="_on_end_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer/Home" to="." method="_on_home_pressed"]
+[connection signal="pressed" from="HBoxContainer/VBoxContainer2/TabContainer/File/HBoxContainer2/New_File" to="." method="_on_new_file_pressed"]
