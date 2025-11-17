@@ -6,6 +6,7 @@ Other projects:
 - [The Github for source codes and portfolio](https://github.com/Theklo-Teal)
 - [Ko-fi is where I'll accept donations](https://ko-fi.com/paracortical)
 
+![Screenshot of Idle and Recording states](documentation/Voiceback.png)
 
 # DESCRIPTION
 A hassle-free voice recording for mobile which tries to mimic tape recorders and dictaphones of old. Made in the Godot Engine. You can just focus on record and playback quickly and not bother with handling files, loading or saving or thinking about the names of files, until you really want to save something.
