@@ -1,15 +1,16 @@
 For Paracortical Initiative, 2025, Diogo "Theklo" Duarte
 
 Other projects:
-https://bsky.app/profile/diogo-duarte.bsky.social
-https://diogo-duarte.itch.io/
-https://github.com/Theklo-Teal
+- [Bluesky for news on any progress I've done](https://bsky.app/profile/diogo-duarte.bsky.social)
+- [Itchi.io for my most stable playable projects](https://diogo-duarte.itch.io/)
+- [The Github for source codes and portfolio](https://github.com/Theklo-Teal)
+- [Ko-fi is where I'll accept donations](https://ko-fi.com/paracortical)
 
 
 # DESCRIPTION
 A hassle-free voice recording for mobile which tries to mimic tape recorders and dictaphones of old. Made in the Godot Engine. You can just focus on record and playback quickly and not bother with handling files, loading or saving or thinking about the names of files, until you really want to save something.
 This is part of my collection of projects in indefinite hiatus. I release it publicly in case someone likes the ideas and wants to develop them further or volunteers to work with me on them.
-See "WHY IN HIATUS?" for more information.
+See "WHY_IN_HIATUS" for more information.
 
 # THE CONCEPT
 I first intended this as a tool to help voice training. I could record my voice, play back immediately to get quick feedback and overwrite what I didn't like, allowing to repeat practice many times, witout bothering with ever growing audio files or having to write save file names every time.
@@ -31,7 +32,7 @@ You can click on a existing file from the list and then it will work with that a
 A new file from an existing audio will create a duplicate of the current working file.
 The "delete" button eliminates an existing current working file, or clears any data in the current recording.
 
-# WHY IN HIATUS?
+# WHY_IN_HIATUS
 Godot isn't great to manipulate audio files. There's a way to have raw PCM data from recordings, but no way to convert to WAV.
 You may record as a WAV, but the sample/buffer data in it isn't just PCM so editing is prone to glitches and corruption in the audio. And I don't know how to convert to a raw PCM buffer.
 If I had more intimate understanding of WAV files, or maybe knew how to code with C# which has libraries for this, maybe I could solve these issues, but I don't have that skill.
